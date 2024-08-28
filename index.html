@@ -87,7 +87,7 @@
 
       // ELEMENTS
       const $canvas = $('#canvas')
-
+      const $colorPicker = $('#color-picker')
       const ctx = $canvas.getContext('2d')
 
       // STATE
@@ -102,6 +102,8 @@
       $canvas.addEventListener('pointermove', draw)
       $canvas.addEventListener('pointerup', stopDrawing)
       $canvas.addEventListener('pointerleave', stopDrawing)
+
+      $colorPicker.addEventListener('change', handleChangeColor)
 
       // METHODS
       function startDrawing(event) {
@@ -130,14 +132,17 @@
 
         ctx.stroke()
 
-        ctx.lineWidth = 1
-
         // update last coordinates
         ;[lastX, lastY] = [offsetX, offsetY]
       }
 
       function stopDrawing(event) {
         isDrawing = false
+      }
+
+      function handleChangeColor() {
+        const { value } = $colorPicker
+        ctx.strokeStyle = value
       }
     </script>
   </head>
