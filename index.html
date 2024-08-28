@@ -98,21 +98,47 @@
       let mode = MODES.DRAW
 
       // EVENTS
-      $canvas.addEventListener('mousedown', startDrawing)
-      $canvas.addEventListener('mousemove', draw)
-      $canvas.addEventListener('mouseup', stopDrawing)
-      $canvas.addEventListener('mouseleave', stopDrawing)
+      $canvas.addEventListener('pointerdown', startDrawing)
+      $canvas.addEventListener('pointermove', draw)
+      $canvas.addEventListener('pointerup', stopDrawing)
+      $canvas.addEventListener('pointerleave', stopDrawing)
 
       // METHODS
       function startDrawing(event) {
         isDrawing = true
 
         const { offsetX, offsetY } = event
+
+        // save initial coordinates
+        ;[startX, startY] = [offsetX, offsetY]
+        ;[lastX, lastY] = [offsetX, offsetY]
       }
 
-      function draw(event) {}
+      function draw(event) {
+        if (!isDrawing) return
 
-      function stopDrawing(event) {}
+        const { offsetX, offsetY } = event
+
+        // start the path
+        ctx.beginPath()
+
+        // move the path to current coordinates
+        ctx.moveTo(lastX, lastY)
+
+        // draw a line between current and new coordinates
+        ctx.lineTo(offsetX, offsetY)
+
+        ctx.stroke()
+
+        ctx.lineWidth = 1
+
+        // update last coordinates
+        ;[lastX, lastY] = [offsetX, offsetY]
+      }
+
+      function stopDrawing(event) {
+        isDrawing = false
+      }
     </script>
   </head>
 
