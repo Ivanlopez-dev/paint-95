@@ -110,6 +110,11 @@
             border-right-color: #eee;
             border-bottom-color: #eee;
           }
+
+          &[disabled] {
+            pointer-events: none;
+            opacity: 0.5;
+          }
         }
       }
 
@@ -152,6 +157,7 @@
       const $drawBtn = $('#draw-btn')
       const $rectangleBtn = $('#rectangle-btn')
       const $eraseBtn = $('#erase-btn')
+      const $pickerBtn = $('#picker-btn')
 
       const ctx = $canvas.getContext('2d')
 
@@ -171,6 +177,10 @@
 
       $colorPicker.addEventListener('change', handleChangeColor)
       $clearBtn.addEventListener('click', clearCanvas)
+
+      $pickerBtn.addEventListener('click', () => {
+        setMode(MODES.PICKER)
+      })
 
       $eraseBtn.addEventListener('click', () => {
         setMode(MODES.ERASE)
@@ -246,7 +256,8 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height)
       }
 
-      function setMode(newMode) {
+      async function setMode(newMode) {
+        let previousMode = mode
         mode = newMode
         // Clearing actual active button
         $('button.active')?.classList.remove('active')
@@ -274,10 +285,32 @@
           ctx.lineWidth = 20
           return
         }
+
+        if (mode === MODES.PICKER) {
+          $pickerBtn.classList.add('active')
+          const eyeDropper = new window.EyeDropper()
+
+          try {
+            const result = await eyeDropper.open()
+            const { sRGBHex } = result
+            ctx.strokeStyle = sRGBHex
+            $colorPicker.value = sRGBHex
+            setMode(previousMode)
+          } catch (e) {
+            // If there has been an error or the user has not retrieved any colours
+          }
+
+          return
+        }
       }
 
       // INIT
       setMode(MODES.DRAW)
+
+      // Shows Picker if browser has support
+      if (typeof window.EyeDropper !== 'undefined') {
+        $pickerBtn.removeAttribute('disabled')
+      }
     </script>
   </head>
 
@@ -319,6 +352,7 @@
             title="Ellipse"
           ></button>
           <button
+            disabled
             id="picker-btn"
             title="Color Picker"
           ></button>
