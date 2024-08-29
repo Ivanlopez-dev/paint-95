@@ -149,6 +149,9 @@
       const $canvas = $('#canvas')
       const $colorPicker = $('#color-picker')
       const $clearBtn = $('#clear-btn')
+      const $drawBtn = $('#draw-btn')
+      const $rectangleBtn = $('#rectangle-btn')
+
       const ctx = $canvas.getContext('2d')
 
       // STATE
@@ -157,6 +160,7 @@
       let lastX = 0
       let lastY = 0
       let mode = MODES.DRAW
+      let imageData
 
       // EVENTS
       $canvas.addEventListener('pointerdown', startDrawing)
@@ -167,6 +171,14 @@
       $colorPicker.addEventListener('change', handleChangeColor)
       $clearBtn.addEventListener('click', clearCanvas)
 
+      $drawBtn.addEventListener('click', () => {
+        setMode(MODES.DRAW)
+      })
+
+      $rectangleBtn.addEventListener('click', () => {
+        setMode(MODES.RECTANGLE)
+      })
+
       // METHODS
       function startDrawing(event) {
         isDrawing = true
@@ -176,6 +188,8 @@
         // save initial coordinates
         ;[startX, startY] = [offsetX, offsetY]
         ;[lastX, lastY] = [offsetX, offsetY]
+
+        imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
       }
 
       function draw(event) {
@@ -183,19 +197,35 @@
 
         const { offsetX, offsetY } = event
 
-        // start the path
-        ctx.beginPath()
+        if (mode === MODES.DRAW) {
+          // start the path
+          ctx.beginPath()
 
-        // move the path to current coordinates
-        ctx.moveTo(lastX, lastY)
+          // move the path to current coordinates
+          ctx.moveTo(lastX, lastY)
 
-        // draw a line between current and new coordinates
-        ctx.lineTo(offsetX, offsetY)
+          // draw a line between current and new coordinates
+          ctx.lineTo(offsetX, offsetY)
 
-        ctx.stroke()
+          ctx.stroke()
 
-        // update last coordinates
-        ;[lastX, lastY] = [offsetX, offsetY]
+          // update last coordinates
+          ;[lastX, lastY] = [offsetX, offsetY]
+          return
+        }
+
+        if (mode === MODES.RECTANGLE) {
+          ctx.putImageData(imageData, 0, 0)
+
+          // startX -> initial click coordinate
+          const width = offsetX - startX
+          const height = offsetY - startY
+
+          ctx.beginPath()
+          ctx.rect(startX, startY, width, height)
+          ctx.stroke()
+          return
+        }
       }
 
       function stopDrawing(event) {
@@ -210,6 +240,29 @@
       function clearCanvas() {
         ctx.clearRect(0, 0, canvas.width, canvas.height)
       }
+
+      function setMode(newMode) {
+        mode = newMode
+        // Clearing actual active button
+        $('button.active')?.classList.remove('active')
+
+        if (mode === MODES.DRAW) {
+          $drawBtn.classList.add('active')
+          canvas.style.cursor = 'crosshair'
+          ctx.lineWidth = 2
+          return
+        }
+
+        if (mode === MODES.RECTANGLE) {
+          $rectangleBtn.classList.add('active')
+          canvas.style.cursor = 'nw-resize'
+          ctx.lineWidth = 2
+          return
+        }
+      }
+
+      // INIT
+      setMode(MODES.DRAW)
     </script>
   </head>
 
@@ -235,7 +288,6 @@
       <aside>
         <nav>
           <button
-            class="active"
             id="draw-btn"
             title="Pincel"
           ></button>
