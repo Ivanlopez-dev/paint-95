@@ -168,6 +168,7 @@
       let lastY = 0
       let mode = MODES.DRAW
       let imageData
+      let isShiftPressed = false
 
       // EVENTS
       $canvas.addEventListener('pointerdown', startDrawing)
@@ -193,6 +194,9 @@
       $rectangleBtn.addEventListener('click', () => {
         setMode(MODES.RECTANGLE)
       })
+
+      document.addEventListener('keydown', handleKeyDown)
+      document.addEventListener('keyup', handleKeyUp)
 
       // METHODS
       function startDrawing(event) {
@@ -233,8 +237,15 @@
           ctx.putImageData(imageData, 0, 0)
 
           // startX -> initial click coordinate
-          const width = offsetX - startX
-          const height = offsetY - startY
+          let width = offsetX - startX
+          let height = offsetY - startY
+
+          if (isShiftPressed) {
+            const sideLength = Math.min(Math.abs(width), Math.abs(height))
+
+            width = width > 0 ? sideLength : -sideLength
+            height = height > 0 ? sideLength : -sideLength
+          }
 
           ctx.beginPath()
           ctx.rect(startX, startY, width, height)
@@ -304,6 +315,14 @@
         }
       }
 
+      function handleKeyDown({ key }) {
+        isShiftPressed = key === 'Shift'
+      }
+
+      function handleKeyUp({ key }) {
+        if (key === 'Shift') isShiftPressed = false
+      }
+
       // INIT
       setMode(MODES.DRAW)
 
@@ -311,6 +330,10 @@
       if (typeof window.EyeDropper !== 'undefined') {
         $pickerBtn.removeAttribute('disabled')
       }
+
+      // Smooth and rounded borders
+      ctx.lineJoin = 'round'
+      ctx.lineCap = 'round'
     </script>
   </head>
 
